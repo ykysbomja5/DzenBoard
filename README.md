@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="mathboard/static/images/logo.png" alt="DzenBoard Logo" width="120" height="120">
+
 
   # 🌌 DzenBoard
 
