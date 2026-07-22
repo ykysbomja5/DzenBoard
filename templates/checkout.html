@@ -1,0 +1,155 @@
+{{define "content"}}
+<div class="container checkout-page-container">
+    <div class="breadcrumbs">
+        <a href="/"><i class="fa-solid fa-house"></i> Главная</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <a href="/cart">Корзина</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span class="active">Оформление заказа</span>
+    </div>
+
+    <h1>Оформление заказа</h1>
+
+    <!-- Success Screen (Hidden by default, shown via JS) -->
+    <div id="checkout-success-screen" class="checkout-success-card" style="display: none;">
+        <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <h2>Заказ успешно оформлен!</h2>
+        <p>Номер вашего заказа: <strong id="success-order-number">NI-12345</strong></p>
+        <p>Мы свяжемся с вами в ближайшее время для подтверждения доставки.</p>
+        
+        <!-- LiqPay Sandbox Payment Simulation Box (Shown only if LiqPay was selected) -->
+        <div id="liqpay-simulation-box" class="liqpay-sandbox-box" style="display: none;">
+            <h3>💳 Онлайн-оплата LiqPay (Тестовый режим)</h3>
+            <p>Сумма к оплате: <strong id="liqpay-amount">0.00 руб.</strong></p>
+            <div class="liqpay-card-mock">
+                <input type="text" placeholder="#### #### #### ####" value="4000 1234 5678 9010" readonly>
+                <div class="card-inline">
+                    <input type="text" placeholder="ММ/ГГ" value="12/28" readonly>
+                    <input type="password" placeholder="CVV" value="***" readonly>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="simulateLiqPayPayment()">Оплатить тестовой картой</button>
+            <p class="liqpay-note">Это безопасная интеграция в песочнице. Никакие реальные средства списаны не будут.</p>
+        </div>
+
+        <div class="success-actions">
+            <a href="/catalog" class="btn btn-outline">Вернуться в магазин</a>
+        </div>
+    </div>
+
+    <div class="checkout-layout" id="checkout-form-layout">
+        <!-- Billing Details Form -->
+        <form id="checkout-submission-form" onsubmit="handleCheckoutSubmit(event)">
+            <div class="checkout-section">
+                <h3><span class="step-num">1</span> Контактные данные</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="checkout-name">ФИО получателя *</label>
+                        <input type="text" id="checkout-name" required placeholder="Иван Иванов">
+                    </div>
+                    <div class="form-group">
+                        <label for="checkout-phone">Номер телефона *</label>
+                        <input type="tel" id="checkout-phone" required placeholder="+7 (959) 123-45-67">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="checkout-email">Электронная почта *</label>
+                        <input type="email" id="checkout-email" required placeholder="customer@domain.com">
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-section">
+                <h3><span class="step-num">2</span> Способ доставки (X-Shipping)</h3>
+                <div class="shipping-options-list">
+                    <label class="shipping-option-card">
+                        <input type="radio" name="shipping_method" value="pickup" checked onchange="updateShippingCost(0)">
+                        <span class="radio-custom"></span>
+                        <div class="shipping-option-details">
+                            <span class="option-title">Самовывоз из магазина (Бесплатно)</span>
+                            <span class="option-desc">г. Луганск, ул. Оборонная, 9 (Пн-Пт: 9:00 - 17:00)</span>
+                        </div>
+                        <span class="option-price">0 руб.</span>
+                    </label>
+                    <label class="shipping-option-card">
+                        <input type="radio" name="shipping_method" value="courier" onchange="updateShippingCost(200)">
+                        <span class="radio-custom"></span>
+                        <div class="shipping-option-details">
+                            <span class="option-title">Курьер по Луганску</span>
+                            <span class="option-desc">Доставка до двери дома. Бесплатно при заказе от 2000 руб.</span>
+                        </div>
+                        <span class="option-price" id="courier-price-display">200 руб.</span>
+                    </label>
+                    <label class="shipping-option-card">
+                        <input type="radio" name="shipping_method" value="post" onchange="updateShippingCost(350)">
+                        <span class="radio-custom"></span>
+                        <div class="shipping-option-details">
+                            <span class="option-title">Региональные службы доставки</span>
+                            <span class="option-desc">Доставка в города Алчевск, Стаханов, Брянка и др. по тарифам почты.</span>
+                        </div>
+                        <span class="option-price">350 руб.</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="checkout-section">
+                <h3><span class="step-num">3</span> Способ оплаты</h3>
+                <div class="payment-options-list">
+                    <label class="payment-option-card">
+                        <input type="radio" name="payment_method" value="cod" checked>
+                        <span class="radio-custom"></span>
+                        <div class="payment-option-details">
+                            <span class="option-title">Наличными при получении</span>
+                            <span class="option-desc">Оплата в кассе магазина или курьеру при получении товара.</span>
+                        </div>
+                    </label>
+                    <label class="payment-option-card">
+                        <input type="radio" name="payment_method" value="liqpay">
+                        <span class="radio-custom"></span>
+                        <div class="payment-option-details">
+                            <span class="option-title">Онлайн-оплата картой (LiqPay)</span>
+                            <span class="option-desc">Мгновенная оплата банковской картой Visa / MasterCard.</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="checkout-section">
+                <h3><span class="step-num">4</span> Комментарий к заказу</h3>
+                <div class="form-group">
+                    <textarea id="checkout-comment" rows="3" placeholder="Укажите здесь ваши пожелания по доставке, код домофона или удобное время звонка..."></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block submit-order-btn">Подтвердить заказ <i class="fa-solid fa-circle-check"></i></button>
+        </form>
+
+        <!-- Checkout Side Summary -->
+        <aside class="checkout-summary-sidebar">
+            <div class="checkout-summary-card">
+                <h3>Ваш заказ</h3>
+                <div class="checkout-summary-items" id="checkout-items-list">
+                    <!-- populated by JS -->
+                </div>
+                
+                <hr>
+                
+                <div class="summary-details">
+                    <div class="summary-row">
+                        <span>Товары:</span>
+                        <span id="checkout-subtotal">0.00 руб.</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Доставка:</span>
+                        <span id="checkout-shipping-cost">0.00 руб.</span>
+                    </div>
+                    <hr>
+                    <div class="summary-row total-row">
+                        <span>Итого к оплате:</span>
+                        <span id="checkout-total-price">0.00 /руб.</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+{{end}}

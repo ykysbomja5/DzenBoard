@@ -1,0 +1,22 @@
+# Executables
+*.exe
+mathboard
+
+# SQLite Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Environment & Logs
+.env
+*.log
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

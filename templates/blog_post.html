@@ -1,0 +1,45 @@
+{{define "content"}}
+<div class="container blog-detail-container">
+    <div class="breadcrumbs">
+        <a href="/"><i class="fa-solid fa-house"></i> Главная</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <a href="/blog">Блог</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span class="active">{{.BlogPost.Title}}</span>
+    </div>
+
+    <article class="blog-full-article">
+        <header class="article-header">
+            <h1>{{.BlogPost.Title}}</h1>
+            <div class="article-meta">
+                <span><i class="fa-regular fa-calendar"></i> {{.BlogPost.CreatedAt.Format "02.01.2006"}}</span>
+                <span><i class="fa-solid fa-user"></i> Редакция «Наша Игрушка»</span>
+            </div>
+        </header>
+
+        {{if .BlogPost.Image}}
+        <div class="article-featured-image">
+            <img src="{{.BlogPost.Image}}" alt="{{.BlogPost.Title}}">
+        </div>
+        {{end}}
+
+        <div class="article-content">
+            <!-- Render HTML content safely in Go templates using template.HTML cast or standard unescaped template pipeline. 
+                 To render HTML content dynamically in templates, we can use template.HTML but wait, in our models the field Content is string.
+                 In Go html/template, we can cast it in handler or just let it render. Since we want it to render correctly, let's output it as HTML. 
+                 To allow HTML parsing we can wrap it or output it using standard template markup.
+                 We can do standard html unescaping by rendering using a custom template function or just using double-curlies if it's plain text.
+                 To render HTML tags correctly, in handlers/frontend.go we can typecast BlogPost.Content to template.HTML.
+                 Let's make sure it parses properly. In template we write: {{.BlogPost.Content}} which prints raw if we cast, or escapes if not.
+                 Wait, let's check: we can render it safely. In our handlers/frontend.go we can do template.HTML casting, or in templates we can register a custom function "safeHTML" that converts string to template.HTML.
+                 Yes! Registering "safeHTML" in template FuncMap is the easiest and cleanest way to let us render blog HTML content dynamically! Let's do that!
+            -->
+            {{safeHTML .BlogPost.Content}}
+        </div>
+
+        <footer class="article-footer">
+            <a href="/blog" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Вернуться к списку статей</a>
+        </footer>
+    </article>
+</div>
+{{end}}

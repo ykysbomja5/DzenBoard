@@ -1,0 +1,230 @@
+{{define "content"}}
+<div class="container product-page-container">
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <a href="/"><i class="fa-solid fa-house"></i> Главная</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <a href="/catalog">Каталог</a>
+        {{if .Product.CategoryID}}
+            <i class="fa-solid fa-chevron-right separator"></i>
+            <span>Товар</span>
+        {{end}}
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span class="active">{{.Product.Name}}</span>
+    </div>
+
+    <!-- Product Intro Section -->
+    <div class="product-detail-layout">
+        <!-- Images Gallery (Left Column) -->
+        <div class="product-gallery">
+            <div class="main-image-container">
+                {{if .Product.Image}}
+                <img id="main-product-img" src="{{.Product.Image}}" alt="{{.Product.Name}}" class="main-img">
+                {{else}}
+                <div class="product-image-placeholder lg"><i class="fa-solid fa-box-open"></i></div>
+                {{end}}
+            </div>
+            
+            <!-- Thumbnails -->
+            {{if .Product.Images}}
+            <div class="thumbnail-strip">
+                <div class="thumb-item active" onclick="switchProductImage('{{.Product.Image}}', this)">
+                    <img src="{{.Product.Image}}" alt="Thumbnail Main">
+                </div>
+                {{range .Product.Images}}
+                <div class="thumb-item" onclick="switchProductImage('{{.}}', this)">
+                    <img src="{{.}}" alt="Thumbnail">
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Purchase Panel & Metadata (Right Column) -->
+        <div class="product-purchase-panel">
+            <h1>{{.Product.Name}}</h1>
+            
+            <div class="product-meta-row">
+                <span class="sku-label">Артикул: <strong>{{.Product.SKU}}</strong></span>
+                <span class="product-status-badge {{if gt .Product.Quantity 0}}status-instock{{else}}status-out{{end}}">
+                    {{if gt .Product.Quantity 0}}
+                    <i class="fa-solid fa-circle-check"></i> В наличии ({{.Product.Quantity}} шт.)
+                    {{else}}
+                    <i class="fa-solid fa-circle-xmark"></i> Нет в наличии
+                    {{end}}
+                </span>
+            </div>
+
+            <div class="price-box">
+                <span class="price-value">{{.Product.Price}} руб.</span>
+            </div>
+
+            <!-- Add to Cart Form -->
+            <div class="purchase-controls">
+                <div class="quantity-selector">
+                    <button class="qty-btn" onclick="adjustProductQty(-1)" {{if le .Product.Quantity 0}}disabled{{end}}>-</button>
+                    <input type="number" id="product-qty-input" value="1" min="1" max="{{.Product.Quantity}}" readonly {{if le .Product.Quantity 0}}value="0"{{end}}>
+                    <button class="qty-btn" onclick="adjustProductQty(1)" {{if le .Product.Quantity 0}}disabled{{end}}>+</button>
+                </div>
+                
+                <button class="btn btn-primary btn-lg add-to-cart-action-btn" 
+                        data-id="{{.Product.ID}}" 
+                        data-name="{{.Product.Name}}" 
+                        data-price="{{.Product.Price}}" 
+                        data-image="{{.Product.Image}}"
+                        onclick="addProductWithQty(this)"
+                        {{if le .Product.Quantity 0}}disabled{{end}}>
+                    <i class="fa-solid fa-cart-shopping"></i> Добавить в корзину
+                </button>
+            </div>
+
+            <!-- Quick Specs Summary -->
+            <div class="quick-specs">
+                <h3>Коротко о товаре:</h3>
+                <ul>
+                    {{range $index, $attr := .Product.Attributes}}
+                    {{if lt $index 4}}
+                    <li><strong>{{$attr.Name}}:</strong> {{$attr.Value}}</li>
+                    {{end}}
+                    {{end}}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Tab Section -->
+    <div class="product-tabs-container">
+        <div class="tab-headers">
+            <button class="tab-header-btn active" onclick="switchTab('tab-description', this)">Описание</button>
+            <button class="tab-header-btn" onclick="switchTab('tab-specs', this)">Характеристики</button>
+            <button class="tab-header-btn" onclick="switchTab('tab-reviews', this)">Отзывы ({{len .Reviews}})</button>
+        </div>
+        
+        <div class="tab-contents">
+            <!-- Description -->
+            <div id="tab-description" class="tab-pane active">
+                <div class="product-description-content">
+                    {{if .Product.Description}}
+                        {{.Product.Description}}
+                    {{else}}
+                        <p>Описание для данного товара временно отсутствует. Вы можете уточнить подробности у наших менеджеров.</p>
+                    {{end}}
+                </div>
+            </div>
+            
+            <!-- Specifications -->
+            <div id="tab-specs" class="tab-pane">
+                <table class="specs-table">
+                    <tbody>
+                        <tr>
+                            <td>Артикул 1С</td>
+                            <td>{{.Product.SKU}}</td>
+                        </tr>
+                        {{range .Product.Attributes}}
+                        <tr>
+                            <td>{{.Name}}</td>
+                            <td>{{.Value}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div id="tab-reviews" class="tab-pane">
+                <div class="reviews-layout">
+                    <!-- Reviews list -->
+                    <div class="reviews-list">
+                        <h3>Отзывы покупателей</h3>
+                        {{range .Reviews}}
+                        <div class="review-item">
+                            <div class="review-header">
+                                <span class="review-author">{{.Author}}</span>
+                                <span class="review-date">{{.CreatedAt.Format "02.01.2006"}}</span>
+                            </div>
+                            <div class="review-rating">
+                                {{range $i := seq 1 5}}
+                                    {{if le $i $.Rating}}
+                                        <i class="fa-solid fa-star star-filled"></i>
+                                    {{else}}
+                                        <i class="fa-regular fa-star"></i>
+                                    {{end}}
+                                {{end}}
+                            </div>
+                            <p class="review-text">{{.Text}}</p>
+                        </div>
+                        {{else}}
+                        <p class="no-reviews-msg">Отзывов пока нет. Будьте первым, кто оставит отзыв об этом товаре!</p>
+                        {{end}}
+                    </div>
+
+                    <!-- Review Form -->
+                    <div class="review-form-container">
+                        <h3>Оставить отзыв</h3>
+                        <form id="product-review-form" onsubmit="submitProductReview(event, '{{.Product.ID}}')">
+                            <div class="form-group">
+                                <label for="review-author">Ваше имя</label>
+                                <input type="text" id="review-author" required placeholder="Иван Иванов">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Оценка</label>
+                                <div class="star-rating-input">
+                                    <input type="radio" name="rating" id="star5" value="5" checked><label for="star5"><i class="fa-solid fa-star"></i></label>
+                                    <input type="radio" name="rating" id="star4" value="4"><label for="star4"><i class="fa-solid fa-star"></i></label>
+                                    <input type="radio" name="rating" id="star3" value="3"><label for="star3"><i class="fa-solid fa-star"></i></label>
+                                    <input type="radio" name="rating" id="star2" value="2"><label for="star2"><i class="fa-solid fa-star"></i></label>
+                                    <input type="radio" name="rating" id="star1" value="1"><label for="star1"><i class="fa-solid fa-star"></i></label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="review-text">Комментарий</label>
+                                <textarea id="review-text" rows="4" required placeholder="Поделитесь вашим мнением о качестве товара..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {{if .RelatedProducts}}
+    <section class="related-products-section">
+        <h2 class="section-title">Вам также может понравиться</h2>
+        <div class="products-grid">
+            {{range .RelatedProducts}}
+            <div class="product-card">
+                <a href="/product?slug={{.Slug}}" class="product-image-link">
+                    {{if .Image}}
+                    <img src="{{.Image}}" alt="{{.Name}}" class="product-image">
+                    {{else}}
+                    <div class="product-image-placeholder"><i class="fa-solid fa-box-open"></i></div>
+                    {{end}}
+                </a>
+                <div class="product-card-info">
+                    <a href="/product?slug={{.Slug}}" class="product-name">{{.Name}}</a>
+                    <div class="product-status {{if gt .Quantity 0}}status-instock{{else}}status-out{{end}}">
+                        {{if gt .Quantity 0}}
+                        <i class="fa-solid fa-check"></i> В наличии
+                        {{else}}
+                        <i class="fa-solid fa-xmark"></i> Нет в наличии
+                        {{end}}
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">{{.Price}} руб.</span>
+                        <button class="btn-add-cart add-to-cart-btn" data-id="{{.ID}}" data-name="{{.Name}}" data-price="{{.Price}}" data-image="{{.Image}}" {{if le .Quantity 0}}disabled{{end}}>
+                            <i class="fa-solid fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+</div>
+{{end}}

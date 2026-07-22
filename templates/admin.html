@@ -1,0 +1,296 @@
+{{define "content"}}
+<div class="container admin-page-container">
+    <div class="breadcrumbs">
+        <a href="/"><i class="fa-solid fa-house"></i> Главная</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span class="active">Административная панель</span>
+    </div>
+
+    <div class="admin-header">
+        <h1>Панель управления магазином</h1>
+        <p>Мониторинг базы данных, заказов и шлюза синхронизации 1С (CommerceML)</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+            <div class="stat-icon purple"><i class="fa-solid fa-folder-tree"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Категорий в БД</span>
+                <h2 id="stats-categories">0</h2>
+            </div>
+        </div>
+        <div class="admin-stat-card">
+            <div class="stat-icon orange"><i class="fa-solid fa-box"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Товаров в БД</span>
+                <h2 id="stats-products">0</h2>
+            </div>
+        </div>
+        <div class="admin-stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-receipt"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Всего заказов</span>
+                <h2 id="stats-orders">0</h2>
+            </div>
+        </div>
+        <div class="admin-stat-card">
+            <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Новых заказов для 1С</span>
+                <h2 id="stats-unexported">0</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="admin-layout">
+        <!-- Left Side: Order List -->
+        <div class="admin-orders-list-section">
+            <h2>Последние заказы</h2>
+            <div class="orders-table-wrapper">
+                <table class="admin-orders-table">
+                    <thead>
+                        <tr>
+                            <th>Номер заказа</th>
+                            <th>Дата</th>
+                            <th>Покупатель</th>
+                            <th>Сумма</th>
+                            <th>Статус</th>
+                            <th>Экспорт в 1С</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-orders-tbody">
+                        <tr>
+                            <td colspan="7" class="text-center">Загрузка заказов...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Side: 1C Simulator Controls -->
+        <aside class="admin-control-sidebar">
+            <div class="control-box">
+                <h3><i class="fa-solid fa-rotate"></i> Тестирование шлюза 1С</h3>
+                <p class="control-desc">Вы можете смоделировать запросы от программы 1С:Предприятие для проверки работоспособности CommerceML интеграции.</p>
+                
+                <div class="control-buttons">
+                    <button class="btn btn-outline btn-block" onclick="run1CSimulateCheckauth()">
+                        1. Проверить авторизацию (checkauth)
+                    </button>
+                    <button class="btn btn-outline btn-block" onclick="run1CSimulateQuery()">
+                        2. Выгрузить заказы в XML (query)
+                    </button>
+                    <button class="btn btn-outline btn-block" onclick="run1CSimulateSuccess()">
+                        3. Подтвердить выгрузку (success)
+                    </button>
+                </div>
+                
+                <hr>
+                
+                <div class="simulator-log-box">
+                    <h4>Лог симулятора:</h4>
+                    <pre id="simulator-log-output">Лог пуст. Нажмите кнопку выше для отправки тестового запроса...</pre>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    // Admin interface script
+    document.addEventListener("DOMContentLoaded", function() {
+        loadAdminStats();
+        loadAdminOrders();
+    });
+
+    function loadAdminStats() {
+        fetch("/api/admin/stats")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("stats-categories").innerText = data.total_categories;
+                document.getElementById("stats-products").innerText = data.total_products;
+                document.getElementById("stats-orders").innerText = data.total_orders;
+                document.getElementById("stats-unexported").innerText = data.unexported_orders;
+            })
+            .catch(err => console.error("Error loading stats:", err));
+    }
+
+    function loadAdminOrders() {
+        fetch("/api/admin/orders")
+            .then(res => res.json())
+            .then(orders => {
+                var tbody = document.getElementById("admin-orders-tbody");
+                tbody.innerHTML = "";
+                
+                if (!orders || orders.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center">Заказов пока нет</td></tr>`;
+                    return;
+                }
+
+                orders.forEach(o => {
+                    var itemsHtml = o.items ? o.items.map(item => `<li>${item.name} x ${item.qty} (${item.price} руб.)</li>`).join("") : "Нет товаров";
+                    
+                    var row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>
+                            <strong>${o.order_number}</strong>
+                            <div class="order-details-pop">
+                                <ul>${itemsHtml}</ul>
+                                <div class="order-comment-text">Комментарий: ${o.comment || 'нет'}</div>
+                            </div>
+                        </td>
+                        <td>${o.created_at}</td>
+                        <td>
+                            <strong>${o.customer_name}</strong><br>
+                            <small>${o.customer_phone}</small><br>
+                            <small>${o.customer_email}</small>
+                        </td>
+                        <td><strong>${o.total_price} руб.</strong></td>
+                        <td>
+                            <select onchange="updateOrderStatus('${o.id}', this.value)" class="status-select status-${o.status.toLowerCase()}">
+                                <option value="New" ${o.status === 'New' ? 'selected' : ''}>Новый</option>
+                                <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>В обработке</option>
+                                <option value="Completed" ${o.status === 'Completed' ? 'selected' : ''}>Завершен</option>
+                                <option value="Canceled" ${o.status === 'Canceled' ? 'selected' : ''}>Отменен</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span class="export-badge ${o.c1_exported ? 'exported' : 'pending'}">
+                                ${o.c1_exported ? '<i class="fa-solid fa-check"></i> Выгружен' : '<i class="fa-solid fa-clock"></i> Ожидает'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-outline btn-sm" onclick="showOrderPop(this)">Детали</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(err => console.error("Error loading orders:", err));
+    }
+
+    function updateOrderStatus(orderId, newStatus) {
+        fetch("/api/admin/orders/status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order_id: orderId, status: newStatus })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                loadAdminStats();
+                loadAdminOrders();
+            }
+        })
+        .catch(err => console.error("Error updating status:", err));
+    }
+
+    function showOrderPop(btn) {
+        var pop = btn.closest("tr").querySelector(".order-details-pop");
+        if (pop.style.display === "block") {
+            pop.style.display = "none";
+        } else {
+            pop.style.display = "block";
+        }
+    }
+
+    // 1C Simulation Helpers
+    function run1CSimulateCheckauth() {
+        var logOutput = document.getElementById("simulator-log-output");
+        logOutput.innerText = "Отправка запроса checkauth...\n";
+        
+        fetch("/export/exchange1c.php?type=sale&mode=checkauth", {
+            headers: {
+                "Authorization": "Basic " + btoa("exchange:password")
+            }
+        })
+        .then(res => res.text())
+        .then(text => {
+            logOutput.innerText += "Ответ от сервера:\n" + text;
+        })
+        .catch(err => {
+            logOutput.innerText += "Ошибка: " + err.message;
+        });
+    }
+
+    function run1CSimulateQuery() {
+        var logOutput = document.getElementById("simulator-log-output");
+        logOutput.innerText = "Отправка запроса query (выгрузка новых заказов)...\n";
+        
+        fetch("/export/exchange1c.php?type=sale&mode=query", {
+            headers: {
+                "Authorization": "Basic " + btoa("exchange:password")
+            }
+        })
+        .then(res => res.text())
+        .then(text => {
+            logOutput.innerText += "Ответ от сервера (CommerceML XML):\n" + escapeXml(text.substring(0, 500)) + (text.length > 500 ? "\n...[обрезано]..." : "");
+        })
+        .catch(err => {
+            logOutput.innerText += "Ошибка: " + err.message;
+        });
+    }
+
+    function run1CSimulateSuccess() {
+        var logOutput = document.getElementById("simulator-log-output");
+        logOutput.innerText = "Отправка подтверждения success...\n";
+        
+        fetch("/export/exchange1c.php?type=sale&mode=success", {
+            method: "POST",
+            headers: {
+                "Authorization": "Basic " + btoa("exchange:password")
+            }
+        })
+        .then(res => res.text())
+        .then(text => {
+            logOutput.innerText += "Ответ от сервера:\n" + text;
+            loadAdminStats();
+            loadAdminOrders();
+        })
+        .catch(err => {
+            logOutput.innerText += "Ошибка: " + err.message;
+        });
+    }
+
+    function escapeXml(unsafe) {
+        return unsafe.replace(/[<>&'"]/g, function (c) {
+            switch (c) {
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '&': return '&amp;';
+                case '\'': return '&apos;';
+                case '"': return '&quot;';
+            }
+        });
+    }
+</script>
+
+<style>
+    .order-details-pop {
+        display: none;
+        position: absolute;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px;
+        z-index: 100;
+        box-shadow: var(--shadow-md);
+        max-width: 300px;
+    }
+    .order-details-pop ul {
+        margin: 0;
+        padding-left: 16px;
+        font-size: 0.85rem;
+    }
+    .order-comment-text {
+        margin-top: 8px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        border-top: 1px dashed var(--border-color);
+        padding-top: 4px;
+    }
+</style>
+{{end}}

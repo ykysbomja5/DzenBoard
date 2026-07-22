@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  directus:
+    image: directus/directus:latest
+    container_name: directus_cms
+    ports:
+      - "8055:8055"
+    environment:
+      KEY: "nasha-igrushka-directus-secure-key-12345"
+      SECRET: "nasha-igrushka-directus-secure-secret-54321"
+      
+      # Database connection
+      DB_CLIENT: "pg"
+      DB_HOST: "host.docker.internal"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_DATABASE: "nasha_igrushka"
+      DB_SSL: "false"
+      
+      # Admin Credentials
+      ADMIN_EMAIL: "admin@nasha-igrushka.com"
+      ADMIN_PASSWORD: "admin1234"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always

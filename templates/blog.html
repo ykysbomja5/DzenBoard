@@ -1,0 +1,38 @@
+{{define "content"}}
+<div class="container blog-page-container">
+    <div class="breadcrumbs">
+        <a href="/"><i class="fa-solid fa-house"></i> Главная</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span class="active">Блог</span>
+    </div>
+
+    <div class="blog-header-section">
+        <h1>Блог и обзоры игрушек</h1>
+        <p>Полезные советы для родителей, обзоры новинок, рекомендации психологов и идеи для детского досуга.</p>
+    </div>
+
+    <div class="blog-list-grid">
+        {{range .BlogPosts}}
+        <article class="blog-item-card">
+            <a href="/blog-post?slug={{.Slug}}" class="blog-item-img-link">
+                {{if .Image}}
+                <img src="{{.Image}}" alt="{{.Title}}">
+                {{else}}
+                <div class="blog-image-placeholder"><i class="fa-solid fa-file-pen"></i></div>
+                {{end}}
+            </a>
+            <div class="blog-item-body">
+                <div class="blog-item-meta">
+                    <span class="blog-item-date"><i class="fa-regular fa-calendar"></i> {{.CreatedAt.Format "02.01.2006"}}</span>
+                </div>
+                <h2><a href="/blog-post?slug={{.Slug}}">{{.Title}}</a></h2>
+                <p>{{.Summary}}</p>
+                <a href="/blog-post?slug={{.Slug}}" class="btn btn-outline btn-sm">Читать статью</a>
+            </div>
+        </article>
+        {{else}}
+        <p class="no-blogs">Статьи в блог пока не добавлены.</p>
+        {{end}}
+    </div>
+</div>
+{{end}}

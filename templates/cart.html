@@ -1,0 +1,61 @@
+{{define "content"}}
+<div class="container cart-page-container">
+    <div class="breadcrumbs">
+        <a href="/"><i class="fa-solid fa-house"></i> Главная</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span class="active">Корзина</span>
+    </div>
+
+    <h1>Ваша корзина</h1>
+
+    <div class="cart-layout">
+        <!-- Cart Items List -->
+        <div class="cart-items-wrapper">
+            <table class="cart-table" id="cart-page-table">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Цена</th>
+                        <th>Количество</th>
+                        <th>Сумма</th>
+                        <th>Удалить</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-page-items-body">
+                    <!-- items will be injected by app.js -->
+                </tbody>
+            </table>
+            
+            <div id="cart-empty-message" class="cart-empty-state" style="display: none;">
+                <div class="cart-empty-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                <h3>Ваша корзина пока пуста</h3>
+                <p>Посмотрите наш каталог, чтобы найти что-нибудь интересное!</p>
+                <a href="/catalog" class="btn btn-primary">Перейти в каталог</a>
+            </div>
+        </div>
+
+        <!-- Order Summary Box -->
+        <div class="cart-summary-box" id="cart-summary-block">
+            <h3>Детали заказа</h3>
+            <div class="summary-row">
+                <span>Товары:</span>
+                <span id="summary-items-count">0 шт.</span>
+            </div>
+            <div class="summary-row">
+                <span>Доставка:</span>
+                <span id="summary-shipping">Рассчитывается при оформлении</span>
+            </div>
+            <hr>
+            <div class="summary-row total-row">
+                <span>Итого к оплате:</span>
+                <span id="summary-total-price">0.00 руб.</span>
+            </div>
+            
+            <div class="summary-actions">
+                <a href="/checkout" class="btn btn-primary btn-block btn-lg">Перейти к оформлению</a>
+                <a href="/catalog" class="btn btn-outline btn-block">Продолжить покупки</a>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

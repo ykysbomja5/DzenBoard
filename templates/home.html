@@ -1,0 +1,124 @@
+{{define "content"}}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <span class="hero-tagline">🎨 Игры, которые развивают</span>
+        <h1>Мир радости и открытий для ваших детей</h1>
+        <p>Качественные и безопасные игрушки, конструкторы и транспорт напрямую со склада. Полная синхронизация с наличием!</p>
+        <div class="hero-buttons">
+            <a href="/catalog" class="btn btn-primary btn-lg">В каталог <i class="fa-solid fa-arrow-right"></i></a>
+            <a href="/contacts" class="btn btn-secondary btn-lg">Где мы находимся</a>
+        </div>
+    </div>
+    <div class="hero-image-wrapper">
+        <img src="/static/images/hero_toys.jpg" alt="Детские игрушки" class="hero-image">
+    </div>
+</section>
+
+<!-- Features Row -->
+<section class="container features-section">
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div class="feature-text">
+            <h3>Быстрая доставка</h3>
+            <p>Доставляем по Луганску и регионам за 24 часа</p>
+        </div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="feature-text">
+            <h3>100% Безопасность</h3>
+            <p>Только сертифицированные гипоаллергенные материалы</p>
+        </div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-tags"></i></div>
+        <div class="feature-text">
+            <h3>Лучшие цены</h3>
+            <p>Прямой импорт и интеграция с 1С без посредников</p>
+        </div>
+    </div>
+</section>
+
+<!-- Category Grid -->
+<section class="container categories-section">
+    <h2 class="section-title">Популярные категории</h2>
+    <div class="category-grid">
+        {{range .Categories}}
+            {{if not .ParentID}}
+            <a href="/catalog?category={{.Slug}}" class="category-card">
+                <div class="category-card-overlay"></div>
+                <div class="category-card-content">
+                    <h3>{{.Name}}</h3>
+                    <span class="category-card-btn">Смотреть все <i class="fa-solid fa-chevron-right"></i></span>
+                </div>
+            </a>
+            {{end}}
+        {{end}}
+    </div>
+</section>
+
+<!-- Featured Products Shelf -->
+<section class="container products-shelf">
+    <h2 class="section-title">Рекомендуемые товары</h2>
+    <div class="products-grid">
+        {{range .Products}}
+        <div class="product-card">
+            <div class="product-badge">Рекомендуем</div>
+            <a href="/product?slug={{.Slug}}" class="product-image-link">
+                {{if .Image}}
+                <img src="{{.Image}}" alt="{{.Name}}" class="product-image">
+                {{else}}
+                <div class="product-image-placeholder"><i class="fa-solid fa-box-open"></i></div>
+                {{end}}
+            </a>
+            <div class="product-card-info">
+                <a href="/product?slug={{.Slug}}" class="product-name">{{.Name}}</a>
+                <div class="product-status {{if gt .Quantity 0}}status-instock{{else}}status-out{{end}}">
+                    {{if gt .Quantity 0}}
+                    <i class="fa-solid fa-check"></i> В наличии
+                    {{else}}
+                    <i class="fa-solid fa-xmark"></i> Нет в наличии
+                    {{end}}
+                </div>
+                <div class="product-footer">
+                    <span class="product-price">{{.Price}} руб.</span>
+                    <button class="btn-add-cart add-to-cart-btn" data-id="{{.ID}}" data-name="{{.Name}}" data-price="{{.Price}}" data-image="{{.Image}}" {{if le .Quantity 0}}disabled{{end}}>
+                        <i class="fa-solid fa-cart-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {{else}}
+        <p class="no-products">Товары загружаются из 1С. Пожалуйста, зайдите позже!</p>
+        {{end}}
+    </div>
+    <div class="shelf-action">
+        <a href="/catalog" class="btn btn-outline">Все товары каталога <i class="fa-solid fa-grip"></i></a>
+    </div>
+</section>
+
+<!-- Blog Section -->
+<section class="container blog-preview-section">
+    <h2 class="section-title">Полезные статьи в нашем блоге</h2>
+    <div class="blog-grid">
+        {{range .BlogPosts}}
+        <article class="blog-card">
+            <a href="/blog-post?slug={{.Slug}}" class="blog-image-link">
+                {{if .Image}}
+                <img src="{{.Image}}" alt="{{.Title}}">
+                {{else}}
+                <div class="blog-image-placeholder"><i class="fa-solid fa-file-pen"></i></div>
+                {{end}}
+            </a>
+            <div class="blog-card-content">
+                <span class="blog-date">{{.CreatedAt.Format "02.01.2006"}}</span>
+                <h3><a href="/blog-post?slug={{.Slug}}">{{.Title}}</a></h3>
+                <p>{{.Summary}}</p>
+                <a href="/blog-post?slug={{.Slug}}" class="read-more">Читать далее <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </article>
+        {{end}}
+    </div>
+</section>
+{{end}}

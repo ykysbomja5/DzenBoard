@@ -1,0 +1,136 @@
+{{define "content"}}
+<div class="container catalog-page-container">
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <a href="/"><i class="fa-solid fa-house"></i> Главная</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span>Каталог</span>
+        {{if .CurrentCategory.Name}}
+            <i class="fa-solid fa-chevron-right separator"></i>
+            <span class="active">{{.CurrentCategory.Name}}</span>
+        {{end}}
+    </div>
+
+    <div class="catalog-layout">
+        <!-- Sidebar Filters -->
+        <aside class="catalog-sidebar">
+            <div class="filter-box">
+                <h3>Категории</h3>
+                <ul class="filter-categories-list">
+                    <li>
+                        <a href="/catalog" class="{{if not .CurrentCategory.ID}}active{{end}}">
+                            Все игрушки
+                        </a>
+                    </li>
+                    {{range .Categories}}
+                        {{if not .ParentID}}
+                            <li>
+                                <a href="/catalog?category={{.Slug}}" class="{{if eq $.CurrentCategory.ID .ID}}active{{end}}">
+                                    {{.Name}}
+                                </a>
+                            </li>
+                        {{end}}
+                    {{end}}
+                </ul>
+            </div>
+
+            <form action="/catalog" method="GET" class="filter-form">
+                {{if .CurrentCategory.Slug}}
+                    <input type="hidden" name="category" value="{{.CurrentCategory.Slug}}">
+                {{end}}
+                {{if .SearchQuery}}
+                    <input type="hidden" name="q" value="{{.SearchQuery}}">
+                {{end}}
+
+                <div class="filter-box">
+                    <h3>Фильтр по цене</h3>
+                    <div class="price-filter-inputs">
+                        <div class="price-input-group">
+                            <label>От</label>
+                            <input type="number" name="price_min" placeholder="0" value="{{if gt .PriceMin 0.0}}{{.PriceMin}}{{end}}">
+                        </div>
+                        <div class="price-input-group">
+                            <label>До</label>
+                            <input type="number" name="price_max" placeholder="10000" value="{{if gt .PriceMax 0.0}}{{.PriceMax}}{{end}}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-box">
+                    <h3>Наличие</h3>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="instock" value="true" {{if .InStockOnly}}checked{{end}}>
+                        <span class="checkmark"></span>
+                        Только в наличии
+                    </label>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary btn-block">Применить</button>
+                    <a href="/catalog{{if .CurrentCategory.Slug}}?category={{.CurrentCategory.Slug}}{{end}}" class="btn btn-outline btn-block text-center reset-btn">Сбросить</a>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Main Product Area -->
+        <section class="catalog-products-area">
+            <!-- Catalog Header Controls -->
+            <div class="catalog-controls">
+                <div class="products-count">
+                    Найдено: <strong>{{len .Products}}</strong> товаров
+                </div>
+                
+                <div class="sort-control">
+                    <label for="sort-select">Сортировка:</label>
+                    <select id="sort-select" onchange="location = this.value;">
+                        <option value="/catalog?{{if .CurrentCategory.Slug}}category={{.CurrentCategory.Slug}}&{{end}}{{if .SearchQuery}}q={{.SearchQuery}}&{{end}}instock={{.InStockOnly}}&price_min={{.PriceMin}}&price_max={{.PriceMax}}&sort=newness" {{if eq .CurrentSort "newness"}}selected{{end}}>Новинки</option>
+                        <option value="/catalog?{{if .CurrentCategory.Slug}}category={{.CurrentCategory.Slug}}&{{end}}{{if .SearchQuery}}q={{.SearchQuery}}&{{end}}instock={{.InStockOnly}}&price_min={{.PriceMin}}&price_max={{.PriceMax}}&sort=price_asc" {{if eq .CurrentSort "price_asc"}}selected{{end}}>Сначала дешевле</option>
+                        <option value="/catalog?{{if .CurrentCategory.Slug}}category={{.CurrentCategory.Slug}}&{{end}}{{if .SearchQuery}}q={{.SearchQuery}}&{{end}}instock={{.InStockOnly}}&price_min={{.PriceMin}}&price_max={{.PriceMax}}&sort=price_desc" {{if eq .CurrentSort "price_desc"}}selected{{end}}>Сначала дороже</option>
+                        <option value="/catalog?{{if .CurrentCategory.Slug}}category={{.CurrentCategory.Slug}}&{{end}}{{if .SearchQuery}}q={{.SearchQuery}}&{{end}}instock={{.InStockOnly}}&price_min={{.PriceMin}}&price_max={{.PriceMax}}&sort=name_asc" {{if eq .CurrentSort "name_asc"}}selected{{end}}>По алфавиту (А-Я)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            {{if .Products}}
+                <div class="products-grid">
+                    {{range .Products}}
+                    <div class="product-card">
+                        <a href="/product?slug={{.Slug}}" class="product-image-link">
+                            {{if .Image}}
+                            <img src="{{.Image}}" alt="{{.Name}}" class="product-image">
+                            {{else}}
+                            <div class="product-image-placeholder"><i class="fa-solid fa-box-open"></i></div>
+                            {{end}}
+                        </a>
+                        <div class="product-card-info">
+                            <a href="/product?slug={{.Slug}}" class="product-name">{{.Name}}</a>
+                            <div class="product-status {{if gt .Quantity 0}}status-instock{{else}}status-out{{end}}">
+                                {{if gt .Quantity 0}}
+                                <i class="fa-solid fa-check"></i> В наличии ({{.Quantity}} шт.)
+                                {{else}}
+                                <i class="fa-solid fa-xmark"></i> Нет в наличии
+                                {{end}}
+                            </div>
+                            <div class="product-footer">
+                                <span class="product-price">{{.Price}} руб.</span>
+                                <button class="btn-add-cart add-to-cart-btn" data-id="{{.ID}}" data-name="{{.Name}}" data-price="{{.Price}}" data-image="{{.Image}}" {{if le .Quantity 0}}disabled{{end}}>
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+            {{else}}
+                <div class="no-results">
+                    <div class="no-results-icon"><i class="fa-solid fa-face-frown"></i></div>
+                    <h3>Товары не найдены</h3>
+                    <p>К сожалению, по вашему запросу ничего не найдено. Попробуйте сбросить фильтры или ввести другой поисковый запрос.</p>
+                    <a href="/catalog" class="btn btn-primary">Показать все товары</a>
+                </div>
+            {{end}}
+        </section>
+    </div>
+</div>
+{{end}}

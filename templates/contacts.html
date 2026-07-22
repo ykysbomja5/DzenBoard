@@ -1,0 +1,82 @@
+{{define "content"}}
+<div class="container contacts-page-container">
+    <div class="breadcrumbs">
+        <a href="/"><i class="fa-solid fa-house"></i> Главная</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span class="active">Контакты</span>
+    </div>
+
+    <h1>Контакты и адреса</h1>
+
+    <div class="contacts-layout">
+        <!-- Text details -->
+        <div class="contacts-info-panel">
+            <div class="contact-info-card">
+                <h3><i class="fa-solid fa-location-dot"></i> Наш магазин</h3>
+                <p><strong>Адрес:</strong> г. Луганск, ул. Оборонная, 9</p>
+                <p><em>(напротив стадиона «Авангард», бывший магазин «КОМФИ»)</em></p>
+                <p><strong>Режим работы:</strong> Понедельник — Пятница с 9:00 до 17:00</p>
+            </div>
+
+            <div class="contact-info-card">
+                <h3><i class="fa-solid fa-phone"></i> Телефоны менеджеров по регионам</h3>
+                <table class="contacts-phone-table">
+                    <tbody>
+                        <tr>
+                            <td><strong>Луганск</strong></td>
+                            <td>+7 (959) 111-22-33</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Алчевск / Брянка</strong></td>
+                            <td>+7 (959) 444-55-66</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Стаханов</strong></td>
+                            <td>+7 (959) 777-88-99</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Отдел рекламаций</strong></td>
+                            <td>+7 (959) 000-11-22</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="contact-info-card">
+                <h3><i class="fa-solid fa-envelope"></i> Электронная почта</h3>
+                <p><strong>Для заказов:</strong> sales@nasha-igrushka.com</p>
+                <p><strong>По вопросам сотрудничества:</strong> admin@nasha-igrushka.com</p>
+            </div>
+        </div>
+
+        <!-- Leaflet Map Container -->
+        <div class="contacts-map-panel">
+            <h3>Мы на карте</h3>
+            <div id="contacts-map" style="height: 450px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);"></div>
+            <div class="map-loading-indicator" id="map-loader">
+                <p><i class="fa-solid fa-spinner fa-spin"></i> Загрузка интерактивной карты...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Leaflet map initialization script is embedded directly or called after DOM loads
+    document.addEventListener("DOMContentLoaded", function() {
+        var loader = document.getElementById("map-loader");
+        if (loader) loader.style.display = "none";
+
+        // Coordinates for Luhansk, Oboronna St, 9 (approximately 48.5583, 39.3117)
+        var coords = [48.5583, 39.3117];
+        
+        var map = L.map('contacts-map').setView(coords, 16);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker = L.marker(coords).addTo(map);
+        marker.bindPopup("<b>Магазин «Наша Игрушка»</b><br>г. Луганск, ул. Оборонная, 9").openPopup();
+    });
+</script>
+{{end}}
